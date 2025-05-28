@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WhiteLagoon.Domain.Entities;
 using WhiteLagoon.Infrastructure.Data;
 
 namespace WhiteLagoon.Web.Controllers
@@ -81,13 +82,14 @@ namespace WhiteLagoon.Web.Controllers
             if(objFromDb is null)
             {
                 TempData["error"] = "The villa could not be deleted.";
-                return View();
+                return RedirectToAction("Error", "Home");
             }
 
             _context.Villas.Remove(objFromDb);
             _context.SaveChanges();
+
             TempData["success"] = "The villa has been deleted successfully.";
-            return RedirectToAction("Index");
+         return RedirectToAction("Index");
         }
     }
 }
