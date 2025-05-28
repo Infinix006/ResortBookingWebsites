@@ -28,10 +28,12 @@ namespace WhiteLagoon.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                TempData["error"] = "The villa could not be created.";
                 return View(obj);
             }
             _context.Villas.Add(obj);
             _context.SaveChanges();
+            TempData["success"] = "The villa has been created successfully.";
             return RedirectToAction("Index");
         }
 
@@ -51,11 +53,13 @@ namespace WhiteLagoon.Web.Controllers
         {
             if (!ModelState.IsValid || obj.Id == 0)
             {
+                TempData["error"] = "The villa could not be updated.";
                 return View(obj);
             }
 
             _context.Villas.Update(obj);
             _context.SaveChanges();
+            TempData["success"] = "The villa has been updated successfully.";
             return RedirectToAction("Index");
         }
 
@@ -77,12 +81,15 @@ namespace WhiteLagoon.Web.Controllers
 
             if(objFromDb is null)
             {
+                TempData["error"] = "The villa could not be deleted.";
                 return RedirectToAction("Error", "Home");
             }
 
             _context.Villas.Remove(objFromDb);
             _context.SaveChanges();
-            return RedirectToAction("Index");
+
+            TempData["success"] = "The villa has been deleted successfully.";
+         return RedirectToAction("Index");
         }
     }
 }
