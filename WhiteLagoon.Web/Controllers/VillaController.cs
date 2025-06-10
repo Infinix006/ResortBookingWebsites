@@ -7,9 +7,11 @@ namespace WhiteLagoon.Web.Controllers
     public class VillaController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        public VillaController(IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public VillaController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public IActionResult Index()
@@ -31,7 +33,25 @@ namespace WhiteLagoon.Web.Controllers
                 TempData["error"] = "The villa could not be created.";
                 return View(obj);
             }
-            _unitOfWork.Villa.Add(obj);
+
+            if(obj.Image != null)
+            {
+                string  fileName = Guid.NewGuid().ToString() + Path.GetExtension(obj.Image.FileName); 
+                string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, @"Images\Villa");
+
+                using (var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create))
+                {
+                    obj.Image.CopyTo(fileStream);
+                }
+
+                obj.ImageUrl = @"\Images\Villa\" + fileName;
+            }
+            else
+            {
+                obj.ImageUrl = "https://placehold.co/600x400";
+            }
+
+                _unitOfWork.Villa.Add(obj);
             _unitOfWork.Save();
             TempData["success"] = "The villa has been created successfully.";
             return RedirectToAction("Index");
@@ -55,6 +75,29 @@ namespace WhiteLagoon.Web.Controllers
             {
                 TempData["error"] = "The villa could not be updated.";
                 return View(obj);
+            }
+
+            if (obj.Image != null)
+            {
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(obj.Image.FileName);
+                string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, @"Images\Villa");
+
+                if(!string.IsNullOrEmpty(obj.ImageUrl))
+                {
+                    var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, obj.ImageUrl.TrimStart('\\'));
+
+                    if(System.IO.File.Exists(oldImagePath))
+                    {
+                        System.IO.File.Delete(oldImagePath);
+                    }
+                }
+
+                using (var fileStream = new FileStream(Path.Combine(imagePath, fileName), FileMode.Create))
+                {
+                    obj.Image.CopyTo(fileStream);
+                }
+
+                obj.ImageUrl = @"\Images\Villa\" + fileName;
             }
 
             _unitOfWork.Villa.Update(obj);
@@ -83,6 +126,16 @@ namespace WhiteLagoon.Web.Controllers
             {
                 TempData["error"] = "The villa could not be deleted.";
                 return RedirectToAction("Error", "Home");
+            }
+
+            if (!string.IsNullOrEmpty(obj.ImageUrl))
+            {
+                var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, obj.ImageUrl.TrimStart('\\'));
+
+                if (System.IO.File.Exists(oldImagePath))
+                {
+                    System.IO.File.Delete(oldImagePath);
+                }
             }
 
             _unitOfWork.Villa.Remove(objFromDb);
